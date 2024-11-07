@@ -11,6 +11,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Just the declaration is fine because the Jpa repository already knows what to do since we followed a patter in the name of the method.
     Optional<User> findUserByDocument(String document);
 
-    Optional<User> findUserById(String id);
+    Optional<User> findUserById(Long id);
 
 }
