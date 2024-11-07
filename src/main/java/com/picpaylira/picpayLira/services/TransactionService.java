@@ -5,13 +5,11 @@ import com.picpaylira.picpayLira.domain.user.User;
 import com.picpaylira.picpayLira.dtos.TransactionDTO;
 import com.picpaylira.picpayLira.repositories.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -28,14 +26,17 @@ public class TransactionService {
     @Autowired
     private RestTemplate restTemplate; // Spring Class that allows communication HTTP between services and we can make HTTP calls like GET, POST...
 
-    public void createTransaction(TransactionDTO transaction) throws Exception {
+    @Autowired
+    private NotificationService notificationService;
+
+    public Transaction createTransaction(TransactionDTO transaction) throws Exception {
         User sender = this.userService.findUserById(transaction.senderId());
         User receiver = this.userService.findUserById(transaction.receiverId());
 
         userService.validateTransaction(sender, transaction.value());
 
-        boolean isAuthorized = this.authorizeTransaction(sender, transaction.value());
-        if(!isAuthorized){
+        boolean isAuthorized = this.checkAuthorization();
+        if (!isAuthorized) {
             throw new Exception("Transaction not authorized. Please check with your bank.");
         }
 
@@ -52,18 +53,51 @@ public class TransactionService {
         userService.saveUser(sender);
         userService.saveUser(receiver);
 
+//        this.notificationService.sendNotification(sender, "Transaction realized with success.");
+//        this.notificationService.sendNotification(receiver, "Transaction received with success.");
 
-
+        return newTransaction;
     }
 
-    public boolean authorizeTransaction(User sender, BigDecimal value){
-        ResponseEntity<Map> authorizationResponse = restTemplate.getForEntity(url, Map.class);
+    public boolean checkAuthorization() {
+        try {
+            // Make the API call
+            ResponseEntity<Map<String, Object>> authorizationResponse = restTemplate.getForEntity(url, (Class<Map<String, Object>>) (Class<?>) Map.class);
 
-        System.out.println(authorizationResponse);
+            // Log the response body
+            System.out.println("Authorization Response: " + authorizationResponse.getBody());
 
-        if(authorizationResponse.getStatusCode() == HttpStatus.OK){
-            String message = (String) authorizationResponse.getBody().get("message");
-            return "Autorizado".equalsIgnoreCase(message);
-        } else return false;
+            // Return the response body
+            return true;
+        } catch (HttpClientErrorException e) {
+            // Log the HTTP error response
+            System.out.println("HTTP Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            return false;
+        }
     }
+
+
+//    public Boolean authorizeTransaction() {
+//        // Call the checkAuthorization method to get the response
+//        Boolean authorizationResponse = checkAuthorization();
+//
+//        // Log the full response (you can access specific parts of the response as well)
+//        System.out.println("Authorization Response: " + authorizationResponse);
+//
+//        // Extract the "data" field and check the authorization status
+//        Map<String, Object> data = (Map<String, Object>) authorizationResponse.get("data");
+//        Boolean authorization = (Boolean) data.get("authorization");
+//
+//        // Log the authorization value
+//        System.out.println("Authorization status: " + authorization);
+//
+//        if (!authorization) {
+//            // Log the failure reason
+//            System.out.println("Transaction not authorized. Please check with your bank.");
+//            return false;
+//        }
+//
+//        return true;
+//    }
+
 }
