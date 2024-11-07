@@ -2,11 +2,14 @@ package com.picpaylira.picpayLira.services;
 
 import com.picpaylira.picpayLira.domain.user.User;
 import com.picpaylira.picpayLira.domain.user.UserType;
+import com.picpaylira.picpayLira.dtos.UserDTO;
 import com.picpaylira.picpayLira.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service // Indicate to spring framework that this is a class service so it can inject all the dependencies correctly.
 public class UserService {
@@ -29,5 +32,16 @@ public class UserService {
 
     public void saveUser(User user){
         this.userRepository.save(user);
+    }
+
+    public User createUser(UserDTO data) {
+        User newUser = new User(data);
+        this.saveUser(newUser);
+        return newUser;
+    }
+
+    public List<User> getAllUsers() {
+        return this.userRepository.findAll();
+
     }
 }

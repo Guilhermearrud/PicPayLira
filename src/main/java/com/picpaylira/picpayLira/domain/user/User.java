@@ -1,10 +1,8 @@
 package com.picpaylira.picpayLira.domain.user;
 
+import com.picpaylira.picpayLira.dtos.UserDTO;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -13,6 +11,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @AllArgsConstructor // So it will create all the constructor for the parameters of the class.
+@NoArgsConstructor
 @EqualsAndHashCode(of="id") //Setting id as the primary key
 public class User {
     @Id
@@ -28,4 +27,17 @@ public class User {
     private BigDecimal balance;
     @Enumerated(EnumType.STRING)
     private UserType userType;
+
+    public User(UserDTO data) {
+        this.firstName = data.firstName();
+        this.lastName = data.lastName();
+        this.document = data.document();
+        this.email = data.email();
+        this.password = data.password();
+        this.userType = data.userType();
+        this.balance = data.balance();
+
+
+
+    }
 }
